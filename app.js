@@ -1,93 +1,3 @@
-const categories = [
-  {
-    id: "sleep",
-    label: "Sleep",
-    image:
-      "https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    id: "feeding",
-    label: "Feeding",
-    image:
-      "https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    id: "development",
-    label: "Development",
-    image:
-      "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    id: "health",
-    label: "Health & care",
-    image:
-      "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=300&q=80",
-  },
-  {
-    id: "emotions",
-    label: "Feelings",
-    image:
-      "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=300&q=80",
-  },
-];
-
-const articles = [
-  {
-    id: "1",
-    category: "sleep",
-    date: "10 May 2024",
-    title: "A calmer bedtime when nights feel endless",
-    excerpt: "Small routines that help when your child will not settle.",
-    image:
-      "https://images.unsplash.com/photo-1544126592-807ade215a0b?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "2",
-    category: "feeding",
-    date: "8 May 2024",
-    title: "Picky eating without turning dinner into a battle",
-    excerpt: "What to try when every meal becomes a negotiation.",
-    image:
-      "https://images.unsplash.com/photo-1476718406336-bb5a9690ee2a?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "3",
-    category: "development",
-    date: "5 May 2024",
-    title: "Milestones as a map, not a race",
-    excerpt: "How to notice progress without comparing every week.",
-    image:
-      "https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "4",
-    category: "health",
-    date: "2 May 2024",
-    title: "When to call, and when to wait it out",
-    excerpt: "A parent’s checklist for common worries at home.",
-    image:
-      "https://images.unsplash.com/photo-1631217868264-e5b90bb7e133?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "5",
-    category: "emotions",
-    date: "28 Apr 2024",
-    title: "Big feelings in small bodies",
-    excerpt: "Language that helps during tantrums and tears.",
-    image:
-      "https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "6",
-    category: "sleep",
-    date: "22 Apr 2024",
-    title: "Naps that slipped — what still helps",
-    excerpt: "Adjusting the day when the old schedule no longer fits.",
-    image:
-      "https://images.unsplash.com/photo-1519689680058-324335c77eba?auto=format&fit=crop&w=800&q=80",
-  },
-];
-
 const params = new URLSearchParams(location.search);
 const emptyArticles = params.get("empty") === "articles";
 const emptyCategories = params.get("empty") === "categories";
@@ -104,10 +14,6 @@ const trending = document.getElementById("trending");
 const latestSection = document.getElementById("latest");
 const menuToggle = document.querySelector(".menu-toggle");
 const navLinks = document.getElementById("nav-links");
-
-function categoryLabel(id) {
-  return categories.find((c) => c.id === id)?.label || id;
-}
 
 function visibleArticles() {
   if (emptyArticles) return [];
@@ -143,18 +49,22 @@ function renderCategories() {
 function renderFeatured(visible) {
   featuredList.innerHTML = "";
   const featured = visible.slice(0, 3);
-  featured.forEach((article) => {
-    const card = document.createElement("article");
+  featured.forEach((article, index) => {
+    const card = document.createElement("a");
     card.className = "feature-card";
+    card.href = articleUrl(article.id);
+    if (index === 0) {
+      card.setAttribute("aria-label", "Continue reading: " + article.title);
+    }
     card.innerHTML = `
       <div class="feature-media">
         <img src="${article.image}" alt="" />
       </div>
-      <div>
+      <div class="feature-copy">
         <p class="meta"><span class="tag">${categoryLabel(article.category)}</span> · ${article.date}</p>
         <h3>${article.title}</h3>
-        <p>${article.excerpt}</p>
-        <a class="continue" href="#latest">Continue reading →</a>
+        <p class="feature-excerpt">${article.excerpt}</p>
+        <span class="continue">Continue reading →</span>
       </div>
     `;
     featuredList.appendChild(card);
@@ -163,15 +73,17 @@ function renderFeatured(visible) {
 
 function renderRecent(visible) {
   recentList.innerHTML = "";
-  visible.slice(0, 4).forEach((article) => {
+  visible.slice(0, 3).forEach((article) => {
     const item = document.createElement("li");
     item.className = "recent-item";
     item.innerHTML = `
-      <div class="recent-thumb"><img src="${article.image}" alt="" /></div>
-      <div>
-        <strong>${article.title}</strong>
-        <span>${article.date}</span>
-      </div>
+      <a class="recent-link" href="${articleUrl(article.id)}">
+        <div class="recent-thumb"><img src="${article.image}" alt="" /></div>
+        <div>
+          <strong>${article.title}</strong>
+          <span>${article.date}</span>
+        </div>
+      </a>
     `;
     recentList.appendChild(item);
   });
@@ -195,8 +107,9 @@ function renderArticles() {
   renderRecent(visible);
 
   visible.forEach((article) => {
-    const card = document.createElement("article");
+    const card = document.createElement("a");
     card.className = "card";
+    card.href = articleUrl(article.id);
     card.innerHTML = `
       <div class="card-media"><img src="${article.image}" alt="" /></div>
       <div class="card-body">
